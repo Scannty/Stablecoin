@@ -15,24 +15,39 @@ contract Stablecoin is ERC20Burnable {
     error Stablecoin__MustBeMoreThanZero();
     error Stablecoin__BurnAmountExceedsBalance();
     error Stablecoin__ZeroAddress();
+    error Stablecoin__OnlyOwnerCanCall();
 
-    constructor() ERC20('Stablecoin', 'STC') {}
+    modifier onlyOwner() {
+        if (msg.sender != owner) {
+            revert Stablecoin__OnlyOwnerCanCall();
+        }
+        _;
+    }
 
-    function burn(uint256 _amount) public override {
-        if(_amount <= 0) {
+    address private owner;
+
+    constructor() ERC20("Stablecoin", "STC") {
+        owner = msg.sender;
+    }
+
+    function burn(uint256 _amount) public override onlyOwner {
+        if (_amount <= 0) {
             revert Stablecoin__MustBeMoreThanZero();
         }
-        if(balanceOf(msg.sender) <= _amount) {
+        if (balanceOf(msg.sender) <= _amount) {
             revert Stablecoin__BurnAmountExceedsBalance();
         }
         super.burn(_amount);
     }
 
-    function mint(address _to, uint256 _amount) external returns(bool) {
-        if(_to == address(0)) {
+    function mint(
+        address _to,
+        uint256 _amount
+    ) external onlyOwner returns (bool) {
+        if (_to == address(0)) {
             revert Stablecoin__ZeroAddress();
         }
-        if(_amount <= 0) {
+        if (_amount <= 0) {
             revert Stablecoin__MustBeMoreThanZero();
         }
         _mint(_to, _amount);
